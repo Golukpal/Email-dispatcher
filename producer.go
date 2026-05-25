@@ -2,24 +2,32 @@ package main
 
 import (
 	"encoding/csv"
-	"fmt"
 	"os"
 )
 
-func LoadRecipients(filepath string) error {
-	p, err := os.Open(filepath)
+func LoadRecipients(filePath string, ch chan Recipient) error {
+	defer close(ch)
+
+	f, err := os.Open(filePath)
+	if err != nil {
+		return err
+	}
+	defer f.Close() 
+
+	r := csv.NewReader(f)
+	records, err := r.ReadAll()
 	if err != nil {
 		return err
 	}
 
-	data, err :=csv.NewReader(p).ReadAll()
-	if err != nil {
-		return err
+	
+	for _, record := range records[1:] {
+		recipient := Recipient{
+			Name:  record[0],
+			Email: record[1],
+		}
+		ch <- recipient 
 	}
 
-	for _, mails := range data[1:]{
-		fmt.Println(mails)
-	}
 	return nil
-
 }
